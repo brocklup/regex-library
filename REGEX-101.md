@@ -10,6 +10,7 @@ Every construct below is taught using patterns that actually appear in the refer
 
 ## 📖 Table of Contents
 
+- [What Is Regex, and Why Would I Use This?](#-what-is-regex-and-why-would-i-use-this)
 - [How Matching Actually Works](#-how-matching-actually-works)
 - [Literal Characters](#-literal-characters)
 - [Character Classes](#-character-classes)
@@ -27,6 +28,28 @@ Every construct below is taught using patterns that actually appear in the refer
 - [How to Test Your Patterns](#-how-to-test-your-patterns)
 - [Quick Reference Cheat Sheet](#-quick-reference-cheat-sheet)
 - [Further Resources](#-further-resources)
+
+---
+
+## ❓ What Is Regex, and Why Would I Use This?
+
+**Regex** (short for *regular expression*) is a way to describe a pattern of text so a computer can find, extract, or validate it — instead of searching for one exact string, you describe the *shape* a match should have.
+
+Compare the two approaches:
+
+- **Exact search:** "find the string `AKIAIOSFODNN7EXAMPLE`" — only ever finds that one literal key.
+- **Regex search:** "find anything that starts with `AKIA` followed by 16 uppercase letters or digits" (`\bAKIA[0-9A-Z]{16}\b`) — finds *every* AWS access key in a dataset, even ones you've never seen before, because it matches the *format* of the identifier rather than a specific value.
+
+That's the core idea this whole library is built on: every identifier OSINT analysts care about — emails, phone numbers, crypto wallets, IPs, API keys, hashes — has a predictable *shape*. Regex lets you encode that shape once and then sweep it across logs, leaked databases, social media dumps, malware reports, or scraped pages to pull out every matching instance automatically.
+
+**Why this matters for OSINT work specifically:**
+
+- **Scale.** You can't manually scan a 50,000-line paste dump for email addresses or wallet addresses — a regex does it in milliseconds.
+- **Consistency.** A well-built pattern catches every valid format variation (with or without dashes, `http://` vs `https://` vs no scheme, etc.) so you don't miss matches due to formatting differences.
+- **Reusability.** Once a pattern is written and tested, it works the same way across `grep`, Python, JavaScript, log analysis tools, and SIEMs — write once, run everywhere.
+- **Pivoting.** Capturing groups (covered later) let you extract just the *useful part* of a match — e.g., pulling a numeric Facebook ID out of a full profile URL — so the output feeds directly into the next step of an investigation.
+
+The rest of this guide teaches you the building blocks (literals, character classes, quantifiers, anchors, groups, lookarounds) using patterns that already exist in [the reference library](./README.md), so what you learn is immediately applicable to the patterns you'll actually use.
 
 ---
 
