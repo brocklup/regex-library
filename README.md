@@ -466,7 +466,7 @@ A comprehensive collection of regular expressions for Open Source Intelligence (
 <summary><strong>Combined Auto-detect by Length (click to expand)</strong></summary>
 
 ```regex
-\b(?:0x)?[a-fA-F0-9]{32}\b|\b(?:0x)?[a-fA-F0-9]{40}\b|\b(?:0x)?[a-fA-F0-9]{64}\b|\b(?:0x)?[a-fA-F0-9]{128}\b
+\b(?:0x)?[a-fA-F0-9]{128}\b|\b0x[a-fA-F0-9]{64}\b|\b(?:0x)?[a-fA-F0-9]{64}\b|\b(?:0x)?[a-fA-F0-9]{40}\b|\b(?:0x)?[a-fA-F0-9]{32}\b
 ```
 
 </details>
