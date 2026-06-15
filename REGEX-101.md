@@ -25,6 +25,7 @@ Every construct below is taught using patterns that actually appear in the refer
 - [Flags / Modifiers](#-flags--modifiers)
 - [Reading Real Patterns from the Library](#-reading-real-patterns-from-the-library)
 - [OSINT Gotchas](#-osint-gotchas)
+- [Using These Patterns in Hunchly (Go / RE2)](#-using-these-patterns-in-hunchly-go--re2)
 - [How to Test Your Patterns](#-how-to-test-your-patterns)
 - [Quick Reference Cheat Sheet](#-quick-reference-cheat-sheet)
 - [Further Resources](#-further-resources)
@@ -324,6 +325,27 @@ Once you can narrate a pattern in plain English like this, you can also *edit* i
 5. **Unicode and `\b`.** Cyrillic, Arabic, CJK, and accented text interact with `\d`, `\w`, and `\b` differently depending on whether the engine is in Unicode mode. Test your non-Latin license-plate and Cyrillic patterns against real samples.
 
 6. **Catastrophic backtracking.** Nested quantifiers on overlapping classes (e.g. `(a+)+`) can hang an engine on crafted input. Keep alternations and quantifiers as specific as possible — this is a denial-of-service risk if you run patterns on untrusted bulk text.
+
+---
+
+## 🦫 Using These Patterns in Hunchly (Go / RE2)
+
+[Hunchly](https://hunch.ly/) implements custom regex highlighting using **Go's `regexp` package**, which is built on **RE2** rather than PCRE. RE2 trades some features for guaranteed linear-time matching (no catastrophic backtracking — a real plus for scanning live web pages). The tradeoff: **RE2 does not support lookaheads, lookbehinds, or backreferences** at all — a pattern using `(?=...)`, `(?!...)`, `(?<=...)`, `(?<!...)`, or `\1`-style backreferences will fail to compile in Hunchly with a syntax error.
+
+**What this means for this library:**
+
+- The vast majority of patterns here use only literals, character classes, quantifiers, anchors (`\b`, `^`, `$`), and non-capturing/capturing groups — all of which RE2 supports natively. **Drop these into Hunchly as-is.**
+- The two exceptions are **`SSN["standard"]`** and **`SSN["flexible"]`**, which rely on negative lookaheads (`(?!000|666|9\d{2})`, `(?!00)`, `(?!0000)`) to bake in the SSA's invalid-range rules. These will **not compile in Hunchly**.
+
+**RE2-compatible SSN workaround** — drop the lookaheads and accept some false positives (matches the right *shape* but won't exclude `000-xx-xxxx`, `666-xx-xxxx`, `9xx-xx-xxxx`, group `00`, or serial `0000`):
+
+```regex
+\b\d{3}-\d{2}-\d{4}\b
+```
+
+Use this looser pattern for the initial Hunchly capture, then apply the full lookahead-based pattern (`SSN["standard"]`) in a downstream Python/PCRE pass to filter out the invalid ranges.
+
+**General rule of thumb:** before adding a new pattern to this library, check it doesn't introduce `(?=`, `(?!`, `(?<=`, `(?<!`, or numbered backreferences if Go/RE2 compatibility matters for your workflow — or note in the pattern's description that it requires a PCRE-class engine.
 
 ---
 
