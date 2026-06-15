@@ -4,6 +4,8 @@ A comprehensive collection of regular expressions for Open Source Intelligence (
 
 > **⚠️ Disclaimer:** These patterns are provided for lawful OSINT research, security auditing, and educational purposes only. Always ensure your use complies with applicable laws and regulations. Some patterns (SSNs, credit cards, API keys) involve sensitive data — handle responsibly.
 
+> 🧭 New to regex? Start with [Regex 101: A Field Guide for OSINT Analysts](./REGEX-101.md) — a companion guide that teaches the syntax using patterns from this reference.
+
 ---
 
 ## 📖 Table of Contents
