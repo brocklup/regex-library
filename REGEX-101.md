@@ -27,6 +27,7 @@ Every construct below is taught using patterns that actually appear in the refer
 - [OSINT Gotchas](#-osint-gotchas)
 - [Using These Patterns in Hunchly (Go / RE2)](#-using-these-patterns-in-hunchly-go--re2)
 - [How to Test Your Patterns](#-how-to-test-your-patterns)
+- [Using LLMs to Generate Regex](#-using-llms-to-generate-regex)
 - [Quick Reference Cheat Sheet](#-quick-reference-cheat-sheet)
 - [Further Resources](#-further-resources)
 
@@ -337,6 +338,14 @@ Once you can narrate a pattern in plain English like this, you can also *edit* i
 - The vast majority of patterns here use only literals, character classes, quantifiers, anchors (`\b`, `^`, `$`), and non-capturing/capturing groups — all of which RE2 supports natively. **Drop these into Hunchly as-is.**
 - The two exceptions are **`SSN["standard"]`** and **`SSN["flexible"]`**, which rely on negative lookaheads (`(?!000|666|9\d{2})`, `(?!00)`, `(?!0000)`) to bake in the SSA's invalid-range rules. These will **not compile in Hunchly**.
 
+**Case-insensitive matching with `(?i)`:** RE2 supports the inline flag `(?i)` for case-insensitive matching. This is useful for hex-based patterns (MAC addresses, hashes, Ethereum addresses) where you want `[a-f0-9]` to also match uppercase `A-F`. The library writes `[a-fA-F0-9]` for maximum portability, but in Hunchly you can simplify to `(?i)[a-f0-9]` instead. For example:
+
+```regex
+(?i)\b[a-f0-9]{32}\b
+```
+
+matches both `deadbeef...` and `DEADBEEF...` without needing the `A-F` range. The `(?i)` flag applies to the entire pattern when placed at the start, or you can scope it to a group with `(?i:group)`.
+
 **RE2-compatible SSN workaround** — drop the lookaheads and accept some false positives (matches the right *shape* but won't exclude `000-xx-xxxx`, `666-xx-xxxx`, `9xx-xx-xxxx`, group `00`, or serial `0000`):
 
 ```regex
@@ -357,6 +366,12 @@ Use this looser pattern for the initial Hunchly capture, then apply the full loo
 - **`ripgrep` / `grep -P`** — test against real files on the command line; `rg -o 'pattern' file` prints just the matches.
 
 Always test with **both** a sample that *should* match and one that *should not*. The repo's contributing guidelines ask for exactly this — positive and negative test cases — and it's the fastest way to catch an over-broad pattern before it reaches an investigation.
+
+---
+
+## 🤖 Using LLMs to Generate Regex
+
+LLMs like Claude are surprisingly good at writing regex patterns from plain-language descriptions, and they can save you real time when you need a custom extractor for Hunchly or any other tool. Instead of memorizing syntax, describe what you want to match — "a pattern for Australian Business Numbers: 11 digits, optionally separated by spaces in groups of 2-3-3-3" — and the LLM will produce a working pattern. The key is to **tell the LLM about your engine constraints up front.** If you're writing patterns for Hunchly, include something like *"generate a case-insensitive Go RE2-compatible regex — no lookaheads, no lookbehinds, no backreferences, use `(?i)` for case insensitivity"* in your prompt. Without that constraint the LLM will happily hand you a PCRE pattern full of `(?=...)` constructs that silently fails to compile in Hunchly's Go regex engine. Once you have a candidate pattern, **always validate it**: paste it into [regex101.com](https://regex101.com/) with the Golang flavour selected, test against real positive and negative samples, and check that the match boundaries are tight (word boundaries `\b`, start/end anchors) so you don't drown in false positives during an investigation. Treat LLM-generated regex the same way you'd treat LLM-generated code — a useful first draft that needs human review before it goes into production.
 
 ---
 
